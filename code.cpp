@@ -1,11 +1,58 @@
 #include <bits/stdc++.h>
 using namespace std;
 using namespace std::chrono;
-#define MAX 1000
+#define MAX 10000
+template <typename>
+class Timer;
+
+template <typename R, typename... T>
+class Timer<R(T...)> {
+ public:
+  typedef R (*function_type)(T...);
+  function_type function;
+
+  explicit Timer(function_type function, std::string process_name = "")
+      : function_(function), process_name_(process_name) {}
+
+  R operator()(T... args) {
+    std::chrono::time_point<std::chrono::high_resolution_clock> start, end;
+    start = std::chrono::high_resolution_clock::now();
+
+    R result = function_(std::forward<T>(args)...);
+
+    end = std::chrono::high_resolution_clock::now();
+    int64_t duration =
+        std::chrono::duration_cast<std::chrono::nanoseconds>(end - start)
+            .count();
+
+    std::cout << std::setw(10) << process_name_ << std::setw(30)
+              << "Duration: " + std::to_string(duration) + " ns\n";
+    return result;
+  }
+
+ private:
+  function_type function_;
+  std::string process_name_;
+};
+int A[MAX][MAX], x[MAX], y[MAX];
+int firstLoop()
+{
+    for (int i = 0; i < MAX; i++)
+        for (int j = 0; j < MAX; j++)
+            y[i]+= A[i][j]*x[j];
+    return 0;
+}
+int secondLoop()
+{
+    for (int j = 0; j < MAX; j++)
+        for (int i = 0; i < MAX; i++)
+            y[i]+= A[i][j]*x[j];
+    return 0;
+}
 int main(){
     
     /*Initialize A and x*/
-    int A[MAX][MAX], x[MAX], y[MAX];
+    
     for(int i = 0; i < MAX; i++){
         x[i] = i+1;
         y[i] = 0;
@@ -13,21 +60,8 @@ int main(){
             A[i][j] = i+j;
     }
     //First pair of loops
-    cout << "Pass" << endl;
-    auto start1 = high_resolution_clock::now();
-    for (int i = 0; i < MAX; i++)
-        for (int j = 0; j < MAX; j++)
-            y[i]+= A[i][j]*x[j];
-    auto stop1 = high_resolution_clock::now();
-    //Second pair of loops
-    auto start2 = high_resolution_clock::now();
-    for (int j = 0; j < MAX; j++)
-        for (int i = 0; i < MAX; i++)
-            y[i]+= A[i][j]*x[j];
-    auto stop2 = high_resolution_clock::now();
-
-    auto duration1 = duration_cast<microseconds>(stop1 - start1);
-    auto duration2 = duration_cast<microseconds>(stop2 - start2);
-    cout << "Duration 1 " << duration1.count() << endl;
-    cout << "Duration 2 " << duration2.count() << endl;
+    Timer<int()> time1(firstLoop, "");
+    time1();
+    Timer<int()> time2(secondLoop, "");
+    time2();
 }
